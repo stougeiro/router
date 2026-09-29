@@ -30,7 +30,8 @@
     },
     "require": {
         "php": ">=8.2",
-        "stougeiro/router-contract": "^1.0"
+        "stougeiro/router-contract": "^1.0",
+        "stougeiro/cache-contract": "^1.0"
     },
     "autoload-dev": {
         "psr-4": {
