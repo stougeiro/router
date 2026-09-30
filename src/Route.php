@@ -7,13 +7,23 @@
 
     class Route implements RouteInterface
     {
+        public function __construct(
+            protected string $controller,
+            protected array $variables = [],
+        ) {}
+
+
+        /** @return string
+         */
         public function getController(): string
         {
-            throw new \Exception('Not implemented');
+            return $this->controller;
         }
 
+        /** @return array<string, string>
+         */
         public function getVariables(): array
         {
-            throw new \Exception('Not implemented');
+            return $this->variables;
         }
     }
