@@ -6,23 +6,29 @@
     use STDW\Contract\Http\Router\RouteCollectionInterface;
     use STDW\Http\Router\Parser\RouteParser;
     use STDW\Http\Router\Exception\RouterException;
+    use STDW\Support\Str;
 
 
     class RouteCollection implements RouteCollectionInterface
     {
-        /** @var array
+        /** @var RouteParser
+         */
+        protected RouteParser $parser;
+
+        /** @var array<int, array<string, array<string, array<string, mixed>>>>
          */
         protected array $routes = [];
 
-        /** @var array
+        /** @var array<string, string>
          */
         protected array $names = [];
 
 
         public function __construct(
-            protected RouteParser $parser,
             protected CacheInterface $cache,
-        ) {}
+        ) {
+            $this->parser = new RouteParser();
+        }
 
 
         /**
@@ -32,54 +38,80 @@
          */
         public function load(string $file): void
         {
-            if ( ! file_exists($file)) {
-                throw new RouterException("router: file {$file} not found");
+            if ($this->cache->has('routes')) {
+                /**
+                 * @var array{
+                 *   routes: array<int, array<string, array<string, array<string, mixed>>>>,
+                 *   names: array<string, string>
+                 * } $cached
+                 */
+                $cached = $this->cache->get('routes');
+
+                $this->routes = $cached['routes'];
+                $this->names = $cached['names'];
+
+                return;
             }
 
+            if ( ! file_exists($file)) {
+                throw RouterException::fileNotFound($file);
+            }
+
+            /** @var mixed $routes
+             */
             $routes = include $file;
 
             if ( ! is_array($routes)) {
-                throw new RouterException("router: file {$file} must return an array");
+                throw RouterException::fileContentNotValid($file);
             }
 
+            /** @var array<string, mixed> $routes
+             */
             $this->map($routes);
         }
 
         /**
          * @param string $name
-         * @param array<string, mixed> $vars
+         * @param array<string, string> $vars
          * @return string
          * @throws RouterException
          */
-        public function get(string $name, array $vars = []): string
+        public function generate(string $name, array $vars = []): string
         {
             if ( ! isset($this->names[$name])) {
-                throw new RouterException("router: route '{$name}' not exists");
+                throw RouterException::namedRouteNotFound($name);
             }
 
-            $route = preg_replace_callback('/\{([^}]+)\}/', function ($match) use ($name, $vars) {
-                $varName = explode(':', $match[1])[0];
+            /** @var string $map
+             */
+            $map = $this->names[$name];
 
-                if ( ! isset($vars[$varName])) {
-                    throw new RouterException("router: '{$varName}' is missing for route '{$name}' in '{$match[0]}'");
+            $route = preg_replace_callback('/\{(\w+):(\w+)\}/', function ($match) use ($map, $name, $vars) {
+                $variable = $match[1];
+
+                if ( ! isset($vars[$variable])) {
+                    throw RouterException::missingVariable($variable, "$name: $map");
                 }
 
-                return (string) $vars[$varName];
-            }, $this->names[$name]);
+                return (string) $vars[$variable];
+            },  $map);
 
-            return $route;
+            return (string) $route;
         }
 
-        /** @return array
+        /** @return array<string, mixed>
          */
         public function all(): array
         {
-            return $this->routes;
+            return [
+                'routes' => $this->routes,
+                'names' => $this->names,
+            ];
         }
 
 
         /**
-         * @param array $routemaps
+         * @param array<string, mixed> $routemaps
          * @param string $prefix
          * @return void
          * @throws RouterException
@@ -87,76 +119,95 @@
         protected function map(array $routemaps, string $prefix = ''): void
         {
             foreach ($routemaps as $route => $mix) {
-                if (
-                       is_string($mix)
-                    && is_file($mix)
-                ) {
-                    $this->add($prefix .'/'. $route, $mix);
-                }
+                if (is_string($mix) && Str::isFqcn($mix)) {
 
-                elseif (
-                       is_array($mix)
-                    && count($mix) === 1
-                    && is_file(key($mix))
-                ) {
-                    $this->add($prefix .'/'. $route, key($mix));
-                    $this->nominate(current($mix), $prefix .'/'. $route);
-                }
+                    $parsed = $this->parser->parse($prefix.'/'.$route);
+                    $type = $parsed['variables'] ? 'dynamic' : 'static';
 
-                elseif (
-                    is_array($mix)
-                ) {
-                    $this->map($mix, $prefix .'/'. $route);
-                }
+                    $this->add($mix, [
+                        'map' => $parsed['map'],
+                        'segments' => $parsed['segments'],
+                        'route' => $parsed['route'],
+                        'type' => $type,
+                    ]);
 
-                else {
-                    throw new RouterException('Route "'. $route .'" cannot be mapped.');
+                } elseif (is_array($mix) && count($mix) === 1 && Str::isFqcn( key($mix))) {
+
+                    $parsed = $this->parser->parse($prefix.'/'.$route);
+                    $type = $parsed['variables'] ? 'dynamic' : 'static';
+                    $controller = key($mix);
+
+                    $this->add($controller, [
+                        'map' => $parsed['map'],
+                        'segments' => $parsed['segments'],
+                        'route' => $parsed['route'],
+                        'type' => $type,
+                    ]);
+
+                    /** @var string $name
+                     */
+                    $name = $mix[$controller];
+
+                    $this->nominate($name, [
+                        'map' => $parsed['map'],
+                        'segments' => $parsed['segments'],
+                        'route' => $parsed['route'],
+                        'type' => $type,
+                    ]);
+
+                } elseif (is_array($mix)) {
+                    /** @var array<string, mixed> $mix
+                     */
+                    $this->map($mix, $prefix.'/'.$route);
+                } else {
+                    throw RouterException::routeNotMapped($prefix.'/'.$route);
                 }
             }
         }
 
         /**
-         * @param string $uri
          * @param string $controller
+         * @param array{
+         *   map: string,
+         *   segments: int,
+         *   route: string,
+         *   type: string,
+         * } $data
          * @return void
          */
-        protected function add(string $uri, string $controller): void
+        protected function add(string $controller, array $data): void
         {
-            $parsed = $this->parser->parse($uri);
-
-            $this->routes[$parsed['segments']][$parsed['map']] = [
-                'route' => $parsed['route'],
+            $this->routes[$data['segments']][$data['type']][$data['map']] = [
                 'controller' => $controller,
+                'route' => $data['route'],
             ];
         }
 
         /**
          * @param string $name
-         * @param string $route
+         * @param array{
+         *   map: string,
+         *   segments: int,
+         *   route: string,
+         *   type: string,
+         * } $data
          * @return void
          * @throws RouterException
          */
-        protected function nominate(string $name, string $route): void
+        protected function nominate(string $name, array $data): void
         {
             if ( ! preg_match('/^[a-z0-9.]+$/', $name)) {
-                throw new RouterException("Route name '{$name}' is not valid");
-            }
-
-            $parsed = $this->parser->parse($route);
-            $routemap = $this->parser->validate('/' . $parsed['routemap']);
-
-            if ( ! str_starts_with($routemap, '/')) {
-                $routemap = '/' . $routemap;
+                throw RouterException::invalidRouteName($name);
             }
 
             if (isset($this->names[$name])) {
-                throw new RouterException("Route '{$routemap}' cannot be named by already registered '{$name}'");
+                throw RouterException::routeNameAlreadyRegistered($data['map'], $name);
             }
 
-            $this->names[$name] = $routemap;
+            $this->names[$name] = $data['map'];
 
-            if (isset($this->routes[$parsed['parts']][$parsed['routemap']])) {
-                $this->routes[$parsed['parts']][$parsed['routemap']]['name'] = $name;
+            if (isset($this->routes[$data['segments']][$data['type']][$data['map']])) {
+                $this->routes[$data['segments']][$data['type']][$data['map']]['name'] = $name;
             }
         }
     }
