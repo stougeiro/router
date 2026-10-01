@@ -26,12 +26,16 @@
     "autoload": {
         "psr-4": {
             "STDW\\Http\\Router\\": "src/"
-        }
+        },
+        "files": [
+            "src/Helper/helper.php"
+        ]
     },
     "require": {
         "php": ">=8.2",
         "stougeiro/router-contract": "^2.0",
-        "stougeiro/cache-contract": "^1.0"
+        "stougeiro/cache-contract": "^1.0",
+        "stougeiro/support": "^2.0"
     },
     "autoload-dev": {
         "psr-4": {
