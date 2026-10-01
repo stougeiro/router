@@ -24,6 +24,10 @@
         protected array $names = [];
 
 
+        /**
+         * @param CacheInterface $cache
+         * @return void
+         */
         public function __construct(
             protected CacheInterface $cache,
         ) {
