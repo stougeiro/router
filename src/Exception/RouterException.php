@@ -9,7 +9,7 @@
     {
         /**
          * @param string $type 
-         * @param array $registered 
+         * @param array<string> $registered 
          * @return RouterException 
          */
         public static function unknownPlaceholder(string $type, array $registered): self

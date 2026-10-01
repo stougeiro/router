@@ -28,7 +28,7 @@
             $map = $this->validate($pattern);
             $segments = count_segments($map);
 
-            $route = preg_replace_callback('/\{(\w+):(\w+)\}/', function ($matches) use (&$variables): string {
+            $route = (string) preg_replace_callback('/\{(\w+):(\w+)\}/', function ($matches) use (&$variables): string {
                 $variables = true;
                 $param = $matches[1];
                 $type = $matches[2];

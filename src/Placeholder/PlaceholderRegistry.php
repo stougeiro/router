@@ -7,11 +7,15 @@
 
     class PlaceholderRegistry
     {
-        /** @var array
+        /** @var array<string, string>
          */
         protected array $placeholders = [];
 
 
+        /**
+         * @param array<string, string> $placeholders 
+         * @return void 
+         */
         public function __construct(array $placeholders = [])
         {
             $this->placeholders = array_merge($this->defaults(), $placeholders);
