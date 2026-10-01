@@ -4,6 +4,8 @@
 
     use STDW\Http\Router\Exception\MalformedRouteException;
     use STDW\Http\Router\Placeholder\PlaceholderRegistry;
+    use function STDW\Http\Router\Helper\count_segments;
+
 
     class RouteParser
     {
@@ -16,15 +18,18 @@
          * @return array{
          *   map: string,
          *   segments: int,
-         *   route: string
+         *   route: string,
+         *   variables: bool,
          * }
          */
         public function parse(string $pattern): array
         {
+            $variables = false;
             $map = $this->validate($pattern);
-            $segments = $this->countSegments($map);
+            $segments = count_segments($map);
 
-            $route = preg_replace_callback('/\{(\w+):(\w+)\}/', function ($matches) {
+            $route = preg_replace_callback('/\{(\w+):(\w+)\}/', function ($matches) use (&$variables): string {
+                $variables = true;
                 $param = $matches[1];
                 $type = $matches[2];
                 $regex = $this->placeholders->replace($type);
@@ -34,7 +39,7 @@
 
             $route = '/^'. str_replace('/', '\/', $route) .'$/';
 
-            return compact('map', 'segments', 'route');
+            return compact('variables', 'map', 'segments', 'route');
         }
 
         /**
@@ -53,17 +58,5 @@
             }
 
             return trim($uri, '/');
-        }
-
-        /**
-         * @param string $uri 
-         * @return int 
-         */
-        public function countSegments(string $uri): int
-        {
-            $uri = trim($uri, '/');
-            $segments = explode('/', $uri);
-
-            return ($uri === '') ? 0 : count($segments);
         }
     }
