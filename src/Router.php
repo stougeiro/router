@@ -4,43 +4,135 @@
 
     use STDW\Contract\Http\Router\RouterInterface;
     use STDW\Contract\Http\Router\RouteInterface;
+    use STDW\Contract\Http\Router\RouteCollectionInterface;
+    use STDW\Contract\Cache\CacheInterface;
     use STDW\Contract\Http\RequestInterface;
-    use STDW\Http\Router\Parser\RouteParser;
+    use function STDW\Http\Router\Helper\count_segments;
 
 
     class Router implements RouterInterface
     {
+        /**
+         * @var array{
+         *   'routes': array<int, array<string, array<string, array<string, string>>>>,
+         *   'names': array<string, string>
+         * } $data
+         */
+        protected array $data;
+
+
+        /**
+         * @param RouteCollectionInterface $collection
+         * @param CacheInterface $cache
+         * @param bool $withCache
+         * @return void
+         */
         public function __construct(
-            protected RouteParser $parser,
-            protected RouteCollection $collection,
-        ) {}
+            protected RouteCollectionInterface $collection,
+            protected CacheInterface $cache,
+            protected bool $withCache = false,
+        ) {
+            if ( ! $this->withCache)
+            {
+                $this->cache->delete('routes');
+
+                /**
+                 * @var array{
+                 *   'routes': array<int, array<string, array<string, array<string, string>>>>,
+                 *   'names': array<string, string>
+                 * } $resultset
+                 */
+                $resultset = $this->collection->all();
+                $this->data = $resultset;
+
+                return;
+            }
+
+            if( ! $this->cache->has('routes')) {
+                /**
+                 * @var array{
+                 *   'routes': array<int, array<string, array<string, array<string, string>>>>,
+                 *   'names': array<string, string>
+                 * } $resultset
+                 */
+                $resultset = $this->collection->all();
+                $this->data = $resultset;
+
+                $this->cache->set('routes', $resultset);
+
+                return;
+            }
 
 
+            /**
+             * @var array{
+             *   'routes': array<int, array<string, array<string, array<string, string>>>>,
+             *   'names': array<string, string>
+             * } $resultset
+             */
+            $resultset = $this->cache->get('routes');
+
+            $this->data = $resultset;
+        }
+
+
+        /**
+         * @param RequestInterface $request
+         * @return null|RouteInterface
+         */
         public function match(RequestInterface $request): ?RouteInterface
         {
             $path = $request->getUri()->getPath();
-            $segments = $this->parser->countSegments($path);
-            $collection = $this->collection->all();
+            $segments = count_segments($path);
 
-            if ( ! isset($collection[$segments])) {
+            /** @var array<int, array<string, array<string, array<string, string>>>> $routes
+             */
+            $routes = $this->data['routes'];
+
+            if ( ! isset($routes[$segments])) {
                 return null;
             }
 
-            $static = $collection[$segments]['static'];
-            $dynamic = $collection[$segments]['dynamic'];
+            /** @var array<string, array<string, array<string, string>>> $group
+             */
+            $group = $routes[$segments];
 
-            if (isset($group['static'][$path])) {
+            /** @var array<string, array<string, string>> $static
+             */
+            $static = $group['static'] ?? [];
+
+            /** @var array<string, array<string, string>> $dynamic
+             */
+            $dynamic = $group['dynamic'] ?? [];
+
+            if (isset($static[$path])) {
+                /** @var array{ controller: string, route: string, name?: string } $resource
+                 */
+                $resource = $static[$path];
+
                 return new Route(
-                    controller: $routes[$path]['controller'],
+                    uri: $path,
+                    map: $path,
+                    controller: $resource['controller'],
                 );
             }
 
-            foreach ($routes[$segments] as $route) {
-                if (preg_match($route['route'], $path, $variables)) {
-                    $vars = array_filter($variables, 'is_string', ARRAY_FILTER_USE_KEY);
+            /** @var array{ controller: string, route: string, name?: string } $resource
+             */
+            foreach ($dynamic as $map => $resource) {
+                if (preg_match($resource['route'], $path, $variables)) {
+                    $vars = [];
+
+                    foreach ($variables as $key => $value) {
+                        if (is_string($key)) {
+                            $vars[$key] = $value;
+                        }
+                    }
 
                     return new Route(
-                        controller: $route['controller'],
+                        uri: $path,
+                        map: $map,
+                        controller: $resource['controller'],
                         variables: $vars,
                     );
                 }
