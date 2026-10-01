@@ -3,7 +3,6 @@
     namespace STDW\Http\Router\Parser;
 
     use STDW\Http\Router\Exception\MalformedRouteException;
-    use STDW\Http\Router\Placeholder\PlaceholderRegistry;
     use function STDW\Http\Router\Helper\count_segments;
 
 
@@ -42,12 +41,13 @@
             return compact('variables', 'map', 'segments', 'route');
         }
 
+
         /**
          * @param string $uri 
          * @return string 
          * @throws MalformedRouteException 
          */
-        public function validate(string $uri): string
+        protected function validate(string $uri): string
         {
             if (preg_match('/\s/', $uri)) {
                 throw MalformedRouteException::whitespace($uri);

@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 
-    namespace STDW\Http\Router\Placeholder;
+    namespace STDW\Http\Router\Parser;
 
     use STDW\Http\Router\Exception\RouterException;
 
