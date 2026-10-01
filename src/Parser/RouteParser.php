@@ -8,9 +8,15 @@
 
     class RouteParser
     {
-        public function __construct(
-            private PlaceholderRegistry $placeholders,
-        ) {}
+        /** @var PlaceholderRegistry
+         */
+        protected PlaceholderRegistry $placeholders;
+
+
+        public function __construct()
+        {
+            $this->placeholders = new PlaceholderRegistry();
+        }
 
 
         /**
