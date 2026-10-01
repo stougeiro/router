@@ -5,7 +5,7 @@
     use STDW\Contract\Http\Router\RouteInterface;
 
 
-    class Route implements RouteInterface
+    final class Route implements RouteInterface
     {
         /**
          * @param string $uri 
