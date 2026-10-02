@@ -11,17 +11,17 @@
          * @param string $uri 
          * @return MalformedRouteException 
          */
-        public static function whitespace(string $uri): self
+        public static function duplicateSlashes(string $uri): self
         {
-            return new self("URI contains whitespace: '{$uri}'");
+            return new self("URI contains duplicate slashes: '{$uri}'");
         }
 
         /**
          * @param string $uri 
          * @return MalformedRouteException 
          */
-        public static function duplicateSlashes(string $uri): self
+        public static function invalidCharacters(string $uri): self
         {
-            return new self("URI contains duplicate slashes: '{$uri}'");
+            return new self("Route contains invalid characters: '{$uri}'. Allowed: a-z, A-Z, 0-9, -, _, /, {, }, :, .");
         }
     }

@@ -13,6 +13,8 @@
         protected PlaceholderRegistry $placeholders;
 
 
+        /** @return void 
+         */
         public function __construct()
         {
             $this->placeholders = new PlaceholderRegistry();
@@ -55,12 +57,12 @@
          */
         protected function validate(string $uri): string
         {
-            if (preg_match('/\s/', $uri)) {
-                throw MalformedRouteException::whitespace($uri);
-            }
-
             if (str_contains($uri, '//')) {
                 throw MalformedRouteException::duplicateSlashes($uri);
+            }
+
+            if ( ! preg_match('/^[a-zA-Z0-9\-\_\/\{\}\:\.]+$/', $uri)) {
+                throw MalformedRouteException::invalidCharacters($uri);
             }
 
             return trim($uri, '/');
