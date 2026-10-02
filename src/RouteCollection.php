@@ -125,7 +125,7 @@
             foreach ($routemaps as $route => $mix) {
                 if (is_string($mix) && Str::isFqcn($mix)) {
 
-                    $parsed = $this->parser->parse($prefix.'/'.$route);
+                    $parsed = $this->parser->parse($prefix.$route);
                     $type = $parsed['variables'] ? 'dynamic' : 'static';
 
                     $this->add($mix, [
@@ -137,7 +137,7 @@
 
                 } elseif (is_array($mix) && count($mix) === 1 && Str::isFqcn( key($mix))) {
 
-                    $parsed = $this->parser->parse($prefix.'/'.$route);
+                    $parsed = $this->parser->parse($prefix.$route);
                     $type = $parsed['variables'] ? 'dynamic' : 'static';
                     $controller = key($mix);
 
@@ -162,9 +162,9 @@
                 } elseif (is_array($mix)) {
                     /** @var array<string, mixed> $mix
                      */
-                    $this->map($mix, $prefix.'/'.$route);
+                    $this->map($mix, $prefix.$route);
                 } else {
-                    throw RouterException::routeNotMapped($prefix.'/'.$route);
+                    throw RouterException::routeNotMapped($prefix.$route);
                 }
             }
         }

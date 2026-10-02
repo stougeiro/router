@@ -83,6 +83,7 @@
         public function match(RequestInterface $request): ?RouteInterface
         {
             $path = $request->getUri()->getPath();
+            $path = trim($path, '/');
             $segments = count_segments($path);
 
             /** @var array<int, array<string, array<string, array<string, string>>>> $routes
