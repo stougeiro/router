@@ -129,9 +129,11 @@ it('matches dynamic route within acceptable time', function () {
 });
 
 it('matches route with many dynamic routes within acceptable time', function () {
+    $this->cache->delete('routes');
+
     $routes = [];
     for ($i = 0; $i < 100; $i++) {
-        $routes["route{$i}/{id:num}"] = App\Controllers\StubController::class;
+        $routes["/route{$i}/{id:num}"] = App\Controllers\StubController::class;
     }
 
     $file = __DIR__ . '/../Unit/stubs/many-dynamic-routes.php';
@@ -140,7 +142,7 @@ it('matches route with many dynamic routes within acceptable time', function () 
     $collection = new \STDW\Http\Router\RouteCollection($this->cache);
     $collection->load($file);
 
-    $router = new Router($collection, $this->cache, true);
+    $router = new Router($collection, $this->cache, false);
 
     $this->uri->setPath('/route50/123');
 

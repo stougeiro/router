@@ -72,8 +72,8 @@ it('loads nested routes correctly', function () {
 
     $all = $this->collection->all();
 
-    expect($all['routes'][2]['static']['users/{id:num}'])->toBeArray()
-        ->and($all['routes'][2]['static']['users/{id:num}']['controller'])->toBe(App\Controllers\UserController::class);
+    expect($all['routes'][2]['dynamic']['users/{id:num}'])->toBeArray()
+        ->and($all['routes'][2]['dynamic']['users/{id:num}']['controller'])->toBe(App\Controllers\UserController::class);
 });
 
 it('loads named routes correctly', function () {

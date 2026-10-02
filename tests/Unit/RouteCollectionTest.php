@@ -123,8 +123,8 @@ it('maps route with name', function () {
 
 it('maps nested routes', function () {
     $this->collection->callMap([
-        'api' => [
-            'users' => 'App\Api\Controllers\UserController',
+        '/api' => [
+            '/users' => 'App\Api\Controllers\UserController',
         ],
     ]);
 
