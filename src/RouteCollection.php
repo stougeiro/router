@@ -6,11 +6,15 @@
     use STDW\Contract\Http\Router\RouteCollectionInterface;
     use STDW\Http\Router\Parser\RouteParser;
     use STDW\Http\Router\Exception\RouterException;
+    use STDW\Http\Router\Cache\CacheableTrait;
     use STDW\Support\Str;
 
 
     class RouteCollection implements RouteCollectionInterface
     {
+        use CacheableTrait;
+
+
         /** @var RouteParser
          */
         protected RouteParser $parser;
@@ -42,14 +46,14 @@
          */
         public function load(string $file): void
         {
-            if ($this->cache->has('routes')) {
+            if ($this->hasRoutesInCache()) {
                 /**
                  * @var array{
                  *   routes: array<int, array<string, array<string, array<string, mixed>>>>,
                  *   names: array<string, string>
                  * } $cached
                  */
-                $cached = $this->cache->get('routes');
+                $cached = $this->getRoutesFromCache();
 
                 $this->routes = $cached['routes'];
                 $this->names = $cached['names'];
@@ -103,7 +107,11 @@
             return (string) $route;
         }
 
-        /** @return array<string, mixed>
+        /**
+         * @return array{
+         *   'routes': array<int, array<string, array<string, array<string, mixed>>>>,
+         *   'names': array<string, string>
+         * }
          */
         public function all(): array
         {

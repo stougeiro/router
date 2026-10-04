@@ -7,11 +7,15 @@
     use STDW\Contract\Http\Router\RouteCollectionInterface;
     use STDW\Contract\Cache\CacheInterface;
     use STDW\Contract\Http\RequestInterface;
+    use STDW\Http\Router\Cache\CacheableTrait;
     use function STDW\Http\Router\Helper\count_segments;
 
 
     class Router implements RouterInterface
     {
+        use CacheableTrait;
+
+
         /**
          * @var array{
          *   'routes': array<int, array<string, array<string, array<string, string>>>>,
@@ -34,7 +38,7 @@
         ) {
             if ( ! $this->withCache)
             {
-                $this->cache->delete('routes');
+                $this->clearRoutesCache();
 
                 /**
                  * @var array{
@@ -48,7 +52,7 @@
                 return;
             }
 
-            if( ! $this->cache->has('routes')) {
+            if( ! $this->hasRoutesInCache()) {
                 /**
                  * @var array{
                  *   'routes': array<int, array<string, array<string, array<string, string>>>>,
@@ -58,7 +62,7 @@
                 $resultset = $this->collection->all();
                 $this->data = $resultset;
 
-                $this->cache->set('routes', $resultset);
+                $this->setRoutesToCache($resultset);
 
                 return;
             }
@@ -70,7 +74,7 @@
              *   'names': array<string, string>
              * } $resultset
              */
-            $resultset = $this->cache->get('routes');
+            $resultset = $this->getRoutesFromCache();
 
             $this->data = $resultset;
         }
