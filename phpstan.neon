@@ -4,3 +4,4 @@ parameters:
         - src
     bootstrapFiles:
         - vendor/autoload.php
+    tmpDir: %currentWorkingDirectory%/.phpstan/cache

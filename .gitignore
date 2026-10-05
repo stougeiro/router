@@ -25,7 +25,7 @@ Thumbs.db
 .phpunit.result.cache
 
 # PHPStan / Psalm
-phpstan.cache
+.phpstan/
 psalm-cache/
 
 # Coverage
