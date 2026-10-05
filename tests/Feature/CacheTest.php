@@ -1,41 +1,16 @@
 <?php declare(strict_types=1);
 
-use STDW\Contract\Cache\CacheInterface;
+use STDW\Cache\Cache;
+use STDW\Cache\CacheConfig;
 use STDW\Http\Router\RouteCollection;
 use STDW\Http\Router\Router;
 
 beforeEach(function () {
-    $this->cache = new class implements CacheInterface {
-        private array $storage = [];
-
-        public function has(string $key): bool
-        {
-            return isset($this->storage[$key]);
-        }
-
-        public function get(string $key, mixed $default = null): mixed
-        {
-            return $this->storage[$key] ?? $default;
-        }
-
-        public function set(string $key, mixed $value, int $ttl = 300): bool
-        {
-            $this->storage[$key] = $value;
-            return true;
-        }
-
-        public function delete(string $key): bool
-        {
-            unset($this->storage[$key]);
-            return true;
-        }
-
-        public function clear(): bool
-        {
-            $this->storage = [];
-            return true;
-        }
-    };
+    $this->cache = new Cache(new CacheConfig([
+        'handler' => 'file',
+        'storage' => sys_get_temp_dir() . '/router-cache-test',
+    ]));
+    $this->cache->clear();
 
     $this->collection = new RouteCollection($this->cache);
 });
