@@ -21,15 +21,38 @@ trait CacheableTrait
      */
     protected function getRoutesFromCache(): array
     {
-        $cached = $this->cache->get(self::CACHE_KEY);
+        /**
+         * @var object|array{
+         *   'routes': array<int, array<string, array<string, array<string, mixed>>>>,
+         *   'names': array<string, string>
+         * } $cached
+         */
+        $cached = $this->cache->get(self::CACHE_KEY, []);
+
+        if (is_object($cached)) {
+            $encoded = json_encode($cached);
+
+            if (is_string($encoded)) {
+                /**
+                 * @var array{
+                 *   'routes': array<int, array<string, array<string, array<string, mixed>>>>,
+                 *   'names': array<string, string>
+                 * } $cached
+                 */
+                $cached = json_decode($encoded, true);
+            }
+        }
 
         if ( ! is_array($cached)) {
-            $cached = json_decode(json_encode($cached), true) ?: [];
+            $cached = [
+                'routes' => [],
+                'names' => [],
+            ];
         }
 
         return [
-            'routes' => $cached['routes'] ?? [],
-            'names' => $cached['names'] ?? [],
+            'routes' => $cached['routes'],
+            'names' => $cached['names'],
         ];
     }
 
