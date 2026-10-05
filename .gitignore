@@ -28,6 +28,9 @@ Thumbs.db
 .phpstan/
 psalm-cache/
 
+# Pest
+.pest/
+
 # Coverage
 coverage/
 

@@ -10,7 +10,7 @@ use STDW\Http\Router\Router;
 beforeEach(function () {
     $this->cache = new Cache(new CacheConfig([
         'handler' => 'file',
-        'storage' => sys_get_temp_dir() . '/router-cache-test',
+        'storage' => TMPDIR,
     ]));
     $this->cache->clear();
 

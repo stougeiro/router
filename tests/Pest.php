@@ -5,6 +5,16 @@ require_once __DIR__ . '/Support/FakeControllers/PostController.php';
 require_once __DIR__ . '/Support/FakeControllers/StubController.php';
 require_once __DIR__ . '/Support/FakeControllers/Api/UserController.php';
 
+
+$dir = __DIR__ . '/../.pest';
+
+if ( ! is_dir($dir)) {
+    mkdir($dir, 0755, true);
+}
+
+define('TMPDIR', realpath($dir));
+
+
 pest()->extend(Tests\TestCase::class)->in('Feature');
 
 /*
