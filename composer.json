@@ -1,6 +1,6 @@
 {
     "name": "stougeiro/router",
-    "description": "",
+    "description": "Minimalist, high-performance router for PHP 8.2+ focused exclusively on route resolution. Returns controller + variables with dual cache support (file/sqlite), PHPStan Level 9 compliance, and strict separation of responsibilities.",
     "type": "library",
     "minimum-stability": "stable",
     "prefer-stable": true,
@@ -12,6 +12,22 @@
         }
     ],
     "keywords": [
+        "router",
+        "routing",
+        "route",
+        "route-matching",
+        "route-resolution",
+        "http",
+        "psr-7",
+        "cache",
+        "sqlite",
+        "file-cache",
+        "phpstan",
+        "type-safe",
+        "framework-agnostic",
+        "declarative-routing",
+        "modular-routing",
+        "performance"
     ],
     "support": {
         "issues": "https://github.com/stougeiro/router/issues",
