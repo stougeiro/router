@@ -24,7 +24,7 @@ it('loads routes within acceptable time', function () {
     $this->collection->load($file);
     $duration = microtime(true) - $start;
 
-    expect($duration)->toBeLessThan(1.0);
+    expect($duration)->toBeLessThan(0.1);
 });
 
 it('matches routes within acceptable time', function () {

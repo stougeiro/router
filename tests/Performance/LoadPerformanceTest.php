@@ -21,7 +21,7 @@ it('loads routes from file within acceptable time', function () {
     $this->collection->load($file);
     $duration = microtime(true) - $start;
 
-    expect($duration)->toBeLessThan(1.0);
+    expect($duration)->toBeLessThan(0.1);
 });
 
 it('loads routes from cache within acceptable time', function () {
@@ -53,7 +53,7 @@ it('loads many routes within acceptable time', function () {
     $this->collection->load($file);
     $duration = microtime(true) - $start;
 
-    expect($duration)->toBeLessThan(5.0);
+    expect($duration)->toBeLessThan(1.0);
 
     unlink($file);
 });
